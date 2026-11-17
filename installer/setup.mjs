@@ -539,7 +539,9 @@ async function sandboxProbe() {
         ? "Codex's sandbox refused to run. On Windows this needs a recent Windows 11: install Windows updates, then choose Check and repair."
         : /usage limit|rate limit/i.test(why)
           ? "Your Codex allowance is used up for now. Try again later."
-          : `The test task ended as ${t.status ?? "unknown"}. ${redact(t.error ?? "").slice(0, 200)}`,
+          : t.status === "running"
+            ? "The test task was still running after 3 minutes. Codex may be slow to reach OpenAI right now (check your internet connection or proxy). Try Check and repair later."
+            : `The test task ended as ${t.status ?? "unknown"}. ${redact(t.error ?? "").slice(0, 200)}`,
   };
 }
 async function selfCheck(n = 6, state = readState() ?? {}) {

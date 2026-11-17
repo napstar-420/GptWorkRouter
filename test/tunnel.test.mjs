@@ -36,6 +36,11 @@ check("403 -> key lacks Tunnels access", (await run([started, noAccess], 1500)) 
 check("poller started is only 'checking' at first", (await run([started], 1000)) === "checking");
 check("no failure for 5 s -> connected", (await run([started], 6000)) === "connected");
 check("network failure -> poll failing", (await run([started, net], 1500)) === "poll failing");
+const timeout = { level: "WARN", msg: "poll timed out; backing off: controlplane client: poll transport failed (timeout)" };
+const recovered = { level: "INFO", msg: "poller recovered; polling operational" };
+check("poll timeout -> poll failing", (await run([started, timeout], 1500)) === "poll failing");
+check("poller recovered -> connected at once", (await run([started, timeout, recovered], 1000)) === "connected");
+check("recovered doesn't hide a rejected key", (await run([started, bad, recovered], 1000)) === "key rejected");
 
 fs.rmSync(dir, { recursive: true, force: true });
 console.log(`\n${failed ? `${failed} failed` : "all passed"}`);
