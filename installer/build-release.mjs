@@ -140,7 +140,7 @@ async function main() {
   }
   // What running bridges check for updates (lib/update.mjs).
   fs.writeFileSync(path.join(out, "latest.json"), JSON.stringify({ version, date: new Date().toISOString().slice(0, 10), notes }) + "\n");
-  console.log(`\nRelease files in ${out}. Nothing was uploaded${base ? "" : "; publish with: npm run publish"}.`);
+  console.log(`\nRelease files in ${out}. Nothing was uploaded${base ? "" : "; publish with: npm run release:publish"}.`);
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) main().catch((err) => (console.error(err.message), process.exit(1)));
