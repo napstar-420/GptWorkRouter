@@ -1,0 +1,43 @@
+# Release: test, build all four platforms and publish to GitHub Releases.
+#   1. Bump "version" in package.json, commit with the release note as the commit subject.
+#   2. git tag v<version> && git push && git push --tags
+# Run it by hand (Actions > Release > Run workflow) to test and build without publishing.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write # create the release
+
+jobs:
+  release:
+    # macOS: the build unpacks .zip downloads with macOS tar (bsdtar).
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.21.0" # bundled into every release as its Node: bump on purpose
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm test
+
+      - name: Tag matches package.json
+        if: github.event_name == 'push'
+        run: test "v$(node -p 'require("./package.json").version')" = "$GITHUB_REF_NAME"
+
+      - name: Build all platforms
+        run: node installer/build-release.mjs --notes "$(git log -1 --format=%s)"
+
+      - name: Publish
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/publish.mjs --yes

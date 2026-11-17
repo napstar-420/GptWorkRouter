@@ -37,10 +37,13 @@ if (spawnSync("gh", ["release", "view", tag, "--repo", REPO], { stdio: "ignore" 
 const notes = JSON.parse(read("latest.json")).notes || `GPTWorkRouter ${version}`;
 const mb = files.reduce((n, f) => n + fs.statSync(f).size, 0) / 1e6;
 console.log(`Publish ${tag} to https://github.com/${REPO}/releases (public): ${files.length} files, ${mb.toFixed(0)} MB.\nNotes: ${notes}`);
-const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-const yes = /^y(es)?$/i.test((await rl.question("Upload now? (y/N) ")).trim());
-rl.close();
-if (!yes) stop("Nothing uploaded.");
+// --yes: no prompt (the release workflow; pushing the tag was the decision).
+if (!process.argv.includes("--yes")) {
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  const yes = /^y(es)?$/i.test((await rl.question("Upload now? (y/N) ")).trim());
+  rl.close();
+  if (!yes) stop("Nothing uploaded.");
+}
 const r = spawnSync("gh", ["release", "create", tag, ...files, "--repo", REPO, "--title", `GPTWorkRouter ${version}`, "--notes", notes, "--latest"], { stdio: "inherit" });
 if (r.status !== 0) stop("Upload failed (see above). Check the Releases page before trying again.");
 console.log(`Published. Users install or update with:\n  curl -fsSL https://github.com/${REPO}/releases/latest/download/install.sh | sh\n  irm https://github.com/${REPO}/releases/latest/download/install.ps1 | iex`);
