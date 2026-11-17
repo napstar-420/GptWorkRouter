@@ -1,0 +1,37 @@
+# Fly.io config for the relay (docs/plan-relay.md §7). The app name must match PUBLIC_URL,
+# the bridge's RELAY_URL default (lib/config.mjs) and installer/build-release.mjs DEFAULT_BASE.
+app = "gptworkrouter-relay"
+primary_region = "sin" # nearest to Pakistan on 17 Nov 2026; check with: fly platform regions
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PUBLIC_URL = "https://gptworkrouter-relay.fly.dev"
+  DATA_DIR = "/data"
+  PORT = "8080"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "off" # computers keep a socket open; the machine must stay up
+  auto_start_machines = true
+  min_machines_running = 1
+  [http_service.concurrency]
+    type = "connections"
+    soft_limit = 800
+    hard_limit = 1000
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/healthz"
+
+[[mounts]]
+  source = "relay_data"
+  destination = "/data"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

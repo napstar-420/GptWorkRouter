@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  :root { color-scheme: light dark; font: 14px/1.4 -apple-system, system-ui, sans-serif; }
+  body { margin: 0; padding: 12px; }
+  .bar { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; opacity: .8; font-size: 12px; }
+  .bar span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+  img { max-width: 100%; height: auto; display: block; border-radius: 6px; }
+  pre { white-space: pre-wrap; word-break: break-word; margin: 0; max-height: 480px; overflow: auto; font: 12px/1.45 ui-monospace, Menlo, monospace; }
+  a { color: inherit; }
+</style>
+</head>
+<body>
+<div class="bar"><span id="name">Loading…</span><a id="dl" hidden>Download</a></div>
+<div id="view"></div>
+<script>
+// Renders a show_file result. The file travels in the result's _meta (hidden from the
+// model). Works with the MCP Apps bridge (postMessage) and ChatGPT's window.openai.
+(function () {
+  let done = false;
+  function render(result) {
+    const file = result && result._meta && result._meta["gwr/file"];
+    if (!file || done) return;
+    done = true;
+    document.getElementById("name").textContent = file.name + (file.note ? " · " + file.note : "");
+    const view = document.getElementById("view");
+    const dl = document.getElementById("dl");
+    if (file.kind === "image") {
+      const img = document.createElement("img");
+      img.alt = file.name;
+      img.src = "data:" + file.mime + ";base64," + file.data;
+      view.appendChild(img);
+      dl.href = img.src;
+    } else {
+      const pre = document.createElement("pre");
+      pre.textContent = file.text; // textContent: file text is never parsed as HTML
+      view.appendChild(pre);
+      dl.href = URL.createObjectURL(new Blob([file.text], { type: "text/plain" }));
+    }
+    dl.download = file.name;
+    dl.hidden = false;
+  }
+  function fromOpenAI() {
+    const m = window.openai && window.openai.toolResponseMetadata;
+    if (m) render(m.mcp_tool_result || m.call_tool_result || { _meta: m });
+  }
+  window.addEventListener("message", (e) => {
+    const d = e.data;
+    if (d && d.jsonrpc === "2.0" && d.method === "ui/notifications/tool-result") render(d.params);
+  });
+  window.addEventListener("openai:set_globals", fromOpenAI);
+  fromOpenAI();
+  // MCP Apps handshake; hosts that use window.openai ignore it.
+  try {
+    window.parent.postMessage({ jsonrpc: "2.0", id: 1, method: "ui/initialize", params: { protocolVersion: "2026-01-26", appInfo: { name: "gwr-viewer", version: "1" }, appCapabilities: {} } }, "*");
+    window.addEventListener("message", function once(e) {
+      if (e.data && e.data.id === 1 && e.data.result) {
+        window.removeEventListener("message", once);
+        window.parent.postMessage({ jsonrpc: "2.0", method: "ui/notifications/initialized", params: {} }, "*");
+      }
+    });
+  } catch (_) {}
+})();
+</script>
+</body>
+</html>

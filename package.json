@@ -1,0 +1,40 @@
+{
+  "name": "gpt-work-router",
+  "version": "3.1.0",
+  "description": "Lets ChatGPT (and any MCP client) hand work to Codex and local apps on your computer",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node test/v2.test.mjs && node test/installer.test.mjs && node test/relay.test.mjs && node test/tunnel.test.mjs && node test/update.test.mjs",
+    "release": "node installer/build-release.mjs",
+    "release:publish": "node scripts/publish.mjs",
+    "selftest": "node selftest.mjs",
+    "service:install": "node scripts/service.mjs install",
+    "service:uninstall": "node scripts/service.mjs uninstall",
+    "service:restart": "node scripts/service.mjs restart",
+    "service:status": "node scripts/service.mjs status",
+    "service:logs": "node scripts/service.mjs logs",
+    "test:relay": "npm test --prefix relay",
+    "relay:pair": "node scripts/relay.mjs pair",
+    "relay:status": "node scripts/relay.mjs status",
+    "relay:unpair": "node scripts/relay.mjs unpair"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/client": "^2.4.0",
+    "@modelcontextprotocol/express": "^2.0.2",
+    "@modelcontextprotocol/node": "^2.1.2",
+    "@modelcontextprotocol/server": "^2.4.0",
+    "@openai/codex-sdk": "^0.169.0",
+    "express": "^5.3.0",
+    "https-proxy-agent": "^7.0.6",
+    "smol-toml": "^1.9.1",
+    "standardwebhooks": "^1.1.1",
+    "ws": "^8.23.0",
+    "zod": "^4.6.7"
+  },
+  "license": "MIT"
+}

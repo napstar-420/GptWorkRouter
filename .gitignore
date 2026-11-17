@@ -1,0 +1,11 @@
+node_modules/
+dist/
+selftest-report.json
+selftest-workspace/
+.DS_Store
+*.log
+.env
+# Internal notes (kept local)
+docs/
+HANDOFF.md
+chatgpt-project-instructions.md
