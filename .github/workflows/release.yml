@@ -1,6 +1,6 @@
 # Release: test, build all four platforms and publish to GitHub Releases.
-#   1. Bump "version" in package.json, commit with the release note as the commit subject.
-#   2. git tag v<version> && git push && git push --tags
+#   1. Bump "version" in package.json and commit.
+#   2. git tag -a v<version> -m "one-line release note" && git push && git push origin v<version>
 # Run it by hand (Actions > Release > Run workflow) to test and build without publishing.
 name: Release
 
@@ -34,7 +34,11 @@ jobs:
         run: test "v$(node -p 'require("./package.json").version')" = "$GITHUB_REF_NAME"
 
       - name: Build all platforms
-        run: node installer/build-release.mjs --notes "$(git log -1 --format=%s)"
+        # Release note: the tag's message (git tag -a v1.2.3 -m "note"), else the commit subject.
+        run: |
+          git fetch --force origin "refs/tags/${GITHUB_REF_NAME}:refs/tags/${GITHUB_REF_NAME}" 2>/dev/null || true
+          NOTES="$(git tag -l --format='%(contents:subject)' "$GITHUB_REF_NAME")"
+          node installer/build-release.mjs --notes "${NOTES:-$(git log -1 --format=%s)}"
 
       - name: Publish
         if: github.event_name == 'push'
